@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FoundlyGlobal — Official Lost & Found QR Poster</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
+    body { background: #f1f5f9; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+    .no-print { margin-bottom: 16px; }
+    .print-btn {
+      background: #0f172a; color: #fff; border: none; padding: 12px 28px;
+      font-size: 16px; font-weight: 700; border-radius: 8px; cursor: pointer;
+    }
+    .a4-sheet {
+      width: 210mm; min-height: 297mm; background: #ffffff;
+      border: 4px solid #0f172a; border-radius: 12px; padding: 36px 40px;
+      display: flex; flex-direction: column; justify-content: space-between; text-align: center;
+    }
+    .badge {
+      display: inline-block; background: #dc2626; color: #fff; font-weight: 800;
+      padding: 8px 22px; border-radius: 50px; font-size: 15px; letter-spacing: 1px;
+    }
+    h1 { font-size: 42px; color: #0f172a; margin: 14px 0 6px; letter-spacing: -0.5px; }
+    .subtitle { font-size: 20px; color: #334155; font-weight: 600; }
+    .qr-box {
+      margin: 26px auto; padding: 22px; border: 3px dashed #0284c7;
+      border-radius: 16px; background: #f8fafc; width: 310px;
+    }
+    .qr-box img { width: 240px; height: 240px; display: block; margin: 0 auto 12px; }
+    .scan-text { font-size: 18px; font-weight: 800; color: #0284c7; }
+    .steps {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
+      margin: 10px 0 22px; text-align: left;
+    }
+    .step-card {
+      background: #f1f5f9; padding: 16px; border-radius: 10px; border-left: 4px solid #0f172a;
+    }
+    .step-card h3 { font-size: 16px; color: #0f172a; margin-bottom: 6px; }
+    .step-card p { font-size: 13.5px; color: #475569; line-height: 1.4; }
+    .tags {
+      background: #0f172a; color: #f8fafc; padding: 14px; border-radius: 10px;
+      font-size: 15px; font-weight: 600;
+    }
+    .footer-url { font-size: 18px; font-weight: 800; color: #0f172a; margin-top: 14px; }
+    @media print {
+      body { background: #fff; padding: 0; }
+      .no-print { display: none; }
+      .a4-sheet { border: 3px solid #0f172a; border-radius: 0; width: 100%; min-height: 100vh; }
+    }
+  </style>
+</head>
+<body>
+  <div class="no-print">
+    <button class="print-btn" onclick="window.print()">🖨️ Print / Save A4 Poster (PDF)</button>
+  </div>
+
+  <div class="a4-sheet">
+    <div>
+      <div class="badge">24/7 GLOBAL LOST & FOUND HELPDESK</div>
+      <h1>FoundlyGlobal</h1>
+      <p class="subtitle">Lost or Found Luggage, Passport, Phone, or Missing Person?</p>
+    </div>
+
+    <div class="qr-box">
+      <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://mywebapp-2.vercel.app" alt="FoundlyGlobal QR Code" />
+      <div class="scan-text">📱 SCAN TO REPORT OR SEARCH</div>
+    </div>
+
+    <div class="steps">
+      <div class="step-card">
+        <h3>1. Scan QR Code</h3>
+        <p>Open your phone camera and scan the code above. No app download required.</p>
+      </div>
+      <div class="step-card">
+        <h3>2. Post Details</h3>
+        <p>Upload item photo, location (Airport, Station, Hotel, Haram), and contact info.</p>
+      </div>
+      <div class="step-card">
+        <h3>3. Instant Match</h3>
+        <p>Get matched automatically or print an official A4 missing notice in 1 click.</p>
+      </div>
+    </div>
+
+    <div>
+      <div class="tags">✈️ Airports &nbsp;•&nbsp; 🕋 Hajj & Umrah Groups &nbsp;•&nbsp; 🚆 Railway Stations &nbsp;•&nbsp; 🏨 Hotels</div>
+      <div class="footer-url">🌐 https://mywebapp-2.vercel.app</div>
+    </div>
+  </div>
+</body>
+</html>
