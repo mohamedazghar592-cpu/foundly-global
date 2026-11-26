@@ -540,8 +540,8 @@
         curY = drawTableRow('Subject / Title', report.name || 'Missing Item', tableX, curY, tableW, 130, 42);
         curY = drawTableRow('Category', report.category || 'General', tableX, curY, tableW, 130, 38);
 
-        if (report.age || report.gender) {
-          const ag = [report.age ? `${report.age} Years` : '', report.gender || ''].filter(Boolean).join(' / ');
+if ((isPerson || report.category === 'Pets') && (report.age || report.gender)) {         
+  const ag = [report.age ? `${report.age} Years` : '', report.gender || ''].filter(Boolean).join(' / ');
           curY = drawTableRow('Age & Gender', ag, tableX, curY, tableW, 130, 38);
         }
 
