@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "com.foundly.app",
+        "sha256_cert_fingerprints": ["C6:39:B2:1C:2F:C9:36:C9:74:70:E8:EE:F6:E1:3D:B4:D0:35:5A:FB:57:65:88:1A:6E:E8:B6:E9:5A:F0:A3:5C"]
+      }
+    }]
