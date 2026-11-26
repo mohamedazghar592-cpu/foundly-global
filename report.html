@@ -429,7 +429,7 @@
         curY += 38;
 
         curY = drawWrappedRow('Condition:', report.condition, tableX, curY, tableW);
-        if (report.age || report.gender) {
+       if ((report.category.startsWith('Person') || report.category === 'Pets') && (report.age || report.gender)) {
           const ageGender = [report.age ? `${report.age} Yrs` : '', report.gender || ''].filter(Boolean).join(' • ');
           curY = drawWrappedRow('Age / Gender:', ageGender, tableX, curY, tableW);
         }
