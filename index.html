@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Foundly - Dashboard</title>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <script>
+   const firebaseConfig = {
+      apiKey: "AIzaSyBFC_ONczuEP4TZLiPLI3bQAVaZmqoMZ7E",
+      authDomain: "foundlyglobal.firebaseapp.com",
+      projectId: "foundlyglobal",
+      storageBucket: "foundlyglobal.firebasestorage.app",
+      messagingSenderId: "281291658460",
+      appId: "1:281291658460:web:cca4ua314793cdb41f1019"
+    };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+  </script>
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: #f8fafc; min-height: 100vh; display: flex; justify-content: center; padding: 16px; padding-bottom: 85px; }
+    .dashboard-container { width: 100%; max-width: 480px; }
+
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-top: 10px; }
+    .welcome-text h2 { font-size: 20px; font-weight: 800; color: #0f172a; }
+    .welcome-text p { font-size: 12.5px; color: #64748b; margin-top: 2px; }
+    .btn-logout { background: #fee2e2; color: #dc2626; border: none; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; text-decoration: none; }
+
+    .action-card-lost { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); border-radius: 20px; padding: 22px; color: white; margin-bottom: 16px; cursor: pointer; box-shadow: 0 8px 20px rgba(239, 68, 68, 0.25); display: flex; justify-content: space-between; align-items: center; text-decoration: none; }
+    .action-card-found { background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 20px; padding: 22px; color: white; margin-bottom: 24px; cursor: pointer; box-shadow: 0 8px 20px rgba(16, 185, 129, 0.25); display: flex; justify-content: space-between; align-items: center; text-decoration: none; }
+    
+    .action-content h3 { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
+    .action-content p { font-size: 12.5px; opacity: 0.9; }
+    .action-icon { font-size: 32px; background: rgba(255,255,255,0.2); width: 50px; height: 50px; border-radius: 14px; display: flex; align-items: center; justify-content: center; }
+
+    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .section-title { font-size: 15px; font-weight: 700; color: #1e293b; }
+    .report-count { font-size: 12px; font-weight: 700; background: #e2e8f0; color: #475569; padding: 2px 8px; border-radius: 10px; }
+
+    .report-card { background: #ffffff; border-radius: 16px; padding: 14px; margin-bottom: 12px; border: 1px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+    .report-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .report-badge { font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 6px; text-transform: uppercase; }
+    .badge-lost { background: #fee2e2; color: #dc2626; }
+    .badge-found { background: #dcfce7; color: #16a34a; }
+    
+    .report-body { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
+    .report-thumb { width: 55px; height: 55px; border-radius: 10px; object-fit: cover; background: #f1f5f9; flex-shrink: 0; }
+    .report-info h4 { font-size: 15px; font-weight: 700; color: #0f172a; margin-bottom: 2px; }
+    .report-info p { font-size: 12px; color: #64748b; }
+
+    .report-actions { display: flex; gap: 8px; border-top: 1px solid #f1f5f9; padding-top: 10px; }
+    .btn-matches { flex: 1; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; padding: 8px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; text-align: center; text-decoration: none; }
+    .btn-download { flex: 1; background: #fef3c7; color: #b45309; border: 1px solid #fde68a; padding: 8px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; text-align: center; }
+    .btn-delete { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; }
+
+    .empty-card { background: #ffffff; border-radius: 16px; padding: 30px 20px; text-align: center; border: 1px solid #e2e8f0; color: #64748b; font-size: 13px; line-height: 1.5; }
+
+    /* Views & Bottom Navigation */
+    .tab-view { display: none; }
+    .tab-view.active { display: block; }
+
+    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #ffffff; border-top: 1px solid #e2e8f0; display: flex; justify-content: center; z-index: 100; box-shadow: 0 -2px 10px rgba(0,0,0,0.03); }
+    .bottom-nav-inner { width: 100%; max-width: 480px; display: flex; justify-content: space-around; padding: 8px 0; }
+    .nav-btn { background: none; border: none; display: flex; flex-direction: column; align-items: center; gap: 3px; color: #64748b; font-size: 11px; font-weight: 600; cursor: pointer; padding: 4px 16px; }
+    .nav-btn.active { color: #2563eb; font-weight: 700; }
+    .nav-btn span.nav-icon { font-size: 18px; }
+
+    /* Profile & Rules Cards */
+    .info-card { background: #ffffff; border-radius: 16px; padding: 16px; margin-bottom: 14px; border: 1px solid #e2e8f0; }
+    .info-card h3 { font-size: 15px; font-weight: 800; color: #0f172a; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+    .info-card p, .info-card li { font-size: 13px; color: #475569; line-height: 1.55; }
+    .info-card ul { padding-left: 18px; margin-top: 6px; }
+    .info-card li { margin-bottom: 6px; }
+
+    .profile-avatar { width: 64px; height: 64px; border-radius: 50%; background: #eff6ff; color: #2563eb; font-size: 26px; font-weight: 800; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; border: 2px solid #bfdbfe; }
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 14px 0; text-align: center; }
+    .stat-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 6px; }
+    .stat-box strong { display: block; font-size: 18px; color: #0f172a; }
+    .stat-box span { font-size: 11px; color: #64748b; }
+
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 5px; }
+    .form-input { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 13.5px; color: #0f172a; background: #fff; }
+    .form-input:disabled { background: #f1f5f9; color: #64748b; }
+    .btn-primary { width: 100%; background: #2563eb; color: #fff; border: none; padding: 11px; border-radius: 10px; font-size: 13.5px; font-weight: 700; cursor: pointer; }
+    .btn-danger-outline { width: 100%; background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; padding: 10px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; margin-top: 8px; }
+
+    /* Accordion for Rules & Legal */
+    details.legal-item { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; margin-bottom: 10px; overflow: hidden; }
+    details.legal-item summary { padding: 14px 16px; font-size: 14px; font-weight: 700; color: #0f172a; cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; }
+    details.legal-item summary::-webkit-details-marker { display: none; }
+    details.legal-item summary::after { content: "▾"; font-size: 14px; color: #64748b; }
+    details.legal-item[open] summary::after { content: "▴"; }
+    .legal-content { padding: 0 16px 14px; font-size: 13px; color: #475569; line-height: 1.6; border-top: 1px solid #f1f5f9; padding-top: 10px; }
+    .legal-content ul { padding-left: 18px; margin-top: 6px; }
+    .legal-content li { margin-bottom: 5px; }
+  </style>
+</head>
+<body>
+
+  <div class="dashboard-container">
+    <div class="header">
+      <div class="welcome-text">
+        <h2 id="userNameDisplay">Hi, User</h2>
+        <p>Foundly Recovery Dashboard</p>
+      </div>
+      <a href="Login.html" class="btn-logout" onclick="localStorage.clear()">Logout</a>
+    </div>
+
+    <!-- TAB 1: HOME DASHBOARD (Original Content) -->
+    <div id="tab-home" class="tab-view active">
+      <!-- Lost Button -->
+      <a href="#" onclick="startReport('LOST')" class="action-card-lost">
+        <div class="action-content">
+          <h3>I Lost Something</h3>
+          <p>Report misplaced item or person</p>
+        </div>
+        <div class="action-icon">🚨</div>
+      </a>
+
+      <!-- Found Button -->
+      <a href="#" onclick="startReport('FOUND')" class="action-card-found">
+        <div class="action-content">
+          <h3>I Found Something</h3>
+          <p>Help return item or person safely</p>
+        </div>
+        <div class="action-icon">🤝</div>
+      </a>
+
+      <div class="section-header">
+        <div class="section-title">My Submitted Reports</div>
+        <span class="report-count" id="reportCountBadge">0 Reports</span>
+      </div>
+
+      <div id="myReportsList">
+        <div class="empty-card">Loading reports from Cloud...</div>
+      </div>
+    </div>
+
+    <!-- TAB 2: USER PROFILE -->
+    <div id="tab-profile" class="tab-view">
+      <div class="info-card" style="text-align: center;">
+        <div class="profile-avatar" id="profileInitials">U</div>
+        <h3 id="profileNameTitle" style="justify-content: center; margin-bottom: 2px;">User</h3>
+        <p id="profilePhoneSub" style="font-size: 12.5px; color: #64748b;">Not verified</p>
+
+        <div class="stats-grid">
+          <div class="stat-box">
+            <strong id="statTotal">0</strong>
+            <span>Total Reports</span>
+          </div>
+          <div class="stat-box">
+            <strong id="statLost" style="color: #dc2626;">0</strong>
+            <span>Lost</span>
+          </div>
+          <div class="stat-box">
+            <strong id="statFound" style="color: #16a34a;">0</strong>
+            <span>Found</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <h3>👤 Account Details</h3>
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="editUserName" class="form-input" placeholder="Enter your full name">
+        </div>
+        <div class="form-group">
+          <label>Registered Mobile Number</label>
+          <input type="text" id="profilePhoneInput" class="form-input" disabled>
+        </div>
+        <button onclick="saveProfileName()" class="btn-primary">Save Profile Changes</button>
+      </div>
+
+      <div class="info-card">
+        <h3>⚙️ Account Management</h3>
+        <p style="margin-bottom: 10px;">If you no longer wish to use Foundly, you can permanently delete your submitted reports and local account session.</p>
+        <button onclick="deleteUserAccountData()" class="btn-danger-outline">Delete My Account & Reports</button>
+      </div>
+    </div>
+
+    <!-- TAB 3: RULES, GUIDES & LEGAL -->
+    <div id="tab-rules" class="tab-view">
+      <div class="section-header">
+        <div class="section-title">App Guide, Safety Rules & Legal</div>
+      </div>
+
+      <details class="legal-item" open>
+        <summary>📖 How Foundly Works (User Guide)</summary>
+        <div class="legal-content">
+          <ul>
+            <li><strong>1. Submit a Report:</strong> Tap <em>"I Lost Something"</em> or <em>"I Found Something"</em>, add a clear photo, item title, and last seen area.</li>
+            <li><strong>2. Smart Matching:</strong> Tap <em>"Check Matches"</em> on your report card to view opposite reports in the same category across all locations.</li>
+            <li><strong>3. Share Missing Poster:</strong> For lost items/persons, use the <em>"Download"</em> button to save an official missing poster and share it on WhatsApp or local groups.</li>
+            <li><strong>4. Close Report:</strong> Once your item is recovered, delete your report from the dashboard.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="legal-item" open>
+        <summary>🛡️ Safety & Handover Rules</summary>
+        <div class="legal-content">
+          <ul>
+            <li><strong>Meet in Public Places:</strong> Always exchange items at safe, crowded public spots (police station, mall, metro station, or bank).</li>
+            <li><strong>Verify Ownership First:</strong> Before handing over a found item, ask the claimant for proof (purchase bill, serial number, lock-screen wallpaper, or unique marks).</li>
+            <li><strong>No Advance Payments:</strong> Never send money online for courier charges or rewards before seeing and verifying your item in person.</li>
+            <li><strong>Missing Persons:</strong> Always inform local police authorities immediately alongside posting on Foundly.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="legal-item">
+        <summary>🔒 Privacy Policy</summary>
+        <div class="legal-content">
+          <p><strong>Information We Collect:</strong> Foundly collects your name, mobile number, uploaded item/person photos, and last seen location solely to match lost and found reports.</p>
+          <p style="margin-top: 6px;"><strong>How Data is Used:</strong> Your contact number is displayed on matched reports so genuine finders or owners can reach you. We never sell or rent your personal data to third-party advertisers.</p>
+          <p style="margin-top: 6px;"><strong>Data Control:</strong> You can delete individual reports anytime from your dashboard or erase all your data from the Profile tab.</p>
+        </div>
+      </details>
+
+      <details class="legal-item">
+        <summary>📜 Terms & Conditions</summary>
+        <div class="legal-content">
+          <ul>
+            <li>Foundly acts strictly as a community discovery and matching platform between finders and owners.</li>
+            <li>Users must upload genuine, accurate reports. Fake, spam, or misleading listings will be removed.</li>
+            <li>Foundly is not responsible for item condition, offline disputes, or financial transactions between users.</li>
+          </ul>
+        </div>
+      </details>
+
+      <div class="info-card" style="margin-top: 14px;">
+        <h3>📞 Contact & Help Support</h3>
+        <p style="margin-bottom: 10px;">Need help with a report or want to report misuse? Send a message directly to our support team.</p>
+        <div class="form-group">
+          <label>Your Message / Issue</label>
+          <textarea id="supportMessageInput" class="form-input" rows="3" placeholder="Write your query or report ID here..."></textarea>
+        </div>
+        <button onclick="sendSupportMessage()" class="btn-primary">Send Message to Support</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav">
+    <div class="bottom-nav-inner">
+      <button class="nav-btn active" id="nav-home" onclick="switchTab('home')">
+        <span class="nav-icon">🏠</span>
+        <span>Home</span>
+      </button>
+      <button class="nav-btn" id="nav-profile" onclick="switchTab('profile')">
+        <span class="nav-icon">👤</span>
+        <span>Profile</span>
+      </button>
+      <button class="nav-btn" id="nav-rules" onclick="switchTab('rules')">
+        <span class="nav-icon">📋</span>
+        <span>Rules & Guide</span>
+      </button>
+    </div>
+  </nav>
+
+  <script>
+    let userName = localStorage.getItem('foundly_user_name') || 'User';
+    const userPhone = localStorage.getItem('foundly_raw_phone') || '';
+    const fullPhone = localStorage.getItem('foundly_user_phone') || userPhone || 'Not Provided';
+    window.userReportsMap = {};
+
+    function updateUserUI() {
+      document.getElementById('userNameDisplay').textContent = "Hi, " + userName;
+      document.getElementById('profileNameTitle').textContent = userName;
+      document.getElementById('profilePhoneSub').textContent = fullPhone;
+      document.getElementById('editUserName').value = userName;
+      document.getElementById('profilePhoneInput').value = fullPhone;
+      document.getElementById('profileInitials').textContent = userName.charAt(0).toUpperCase();
+    }
+    updateUserUI();
+
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-view').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById('tab-' + tabName).classList.add('active');
+      document.getElementById('nav-' + tabName).classList.add('active');
+      window.scrollTo(0, 0);
+    }
+
+    function saveProfileName() {
+      const newName = document.getElementById('editUserName').value.trim();
+      if (!newName) {
+        alert("Please enter a valid name.");
+        return;
+      }
+      userName = newName;
+      localStorage.setItem('foundly_user_name', userName);
+      updateUserUI();
+      alert("Profile updated successfully!");
+    }
+
+    function startReport(type) {
+      localStorage.setItem('foundly_report_type', type);
+      window.location.href = 'report.html';
+    }
+
+    async function loadUserReports() {
+      const container = document.getElementById('myReportsList');
+      
+      try {
+        const snapshot = await db.collection("reports")
+          .where("contactPhone", ">=", userPhone)
+          .where("contactPhone", "<=", userPhone + "\uf8ff")
+          .get();
+
+        let reports = [];
+        snapshot.forEach(doc => {
+          let data = doc.data();
+          data.id = doc.id;
+          reports.push(data);
+        });
+
+        if (reports.length === 0 && userPhone) {
+          const allSnap = await db.collection("reports").get();
+          allSnap.forEach(doc => {
+            let data = doc.data();
+            if (data.contactPhone && data.contactPhone.includes(userPhone)) {
+              data.id = doc.id;
+              reports.push(data);
+            }
+          });
+        }
+
+        document.getElementById('reportCountBadge').textContent = reports.length + " Reports";
+
+        // Update Profile Stats
+        const lostCount = reports.filter(r => r.type === 'LOST').length;
+        const foundCount = reports.filter(r => r.type === 'FOUND').length;
+        document.getElementById('statTotal').textContent = reports.length;
+        document.getElementById('statLost').textContent = lostCount;
+        document.getElementById('statFound').textContent = foundCount;
+
+        if (reports.length === 0) {
+          container.innerHTML = `
+            <div class="empty-card">
+              You haven't submitted any reports yet.<br>
+              Click 'I Lost Something' or 'I Found Something' to create one.
+            </div>`;
+          return;
+        }
+
+        container.innerHTML = "";
+        window.userReportsMap = {};
+
+        reports.forEach(report => {
+          window.userReportsMap[report.id] = report;
+          const card = document.createElement('div');
+          card.className = "report-card";
+          
+          const isLost = report.type === 'LOST';
+          const badgeClass = isLost ? 'badge-lost' : 'badge-found';
+          const photoSrc = report.photo ? report.photo : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="55" height="55" fill="%2394a3b8"><rect width="55" height="55" fill="%23f1f5f9"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="20">📦</text></svg>';
+
+          // Download button ONLY shown for LOST (Missing) reports
+          const downloadBtnHtml = isLost
+            ? `<button onclick="downloadMissingReport('${report.id}')" class="btn-download">📥 Download</button>`
+            : '';
+
+          card.innerHTML = `
+            <div class="report-top">
+              <span class="report-badge ${badgeClass}">${report.type} • ${report.category}</span>
+              <span style="font-size: 11px; color: #64748b;">${report.createdAt ? new Date(report.createdAt).toLocaleDateString() : ''}</span>
+            </div>
+            <div class="report-body">
+              <img src="${photoSrc}" class="report-thumb" alt="Photo">
+              <div class="report-info">
+                <h4>${report.name}</h4>
+                <p>📍 ${report.landmark || ''}, ${report.city || ''}</p>
+              </div>
+            </div>
+            <div class="report-actions">
+              <button onclick="checkMatches('${report.id}')" class="btn-matches">🔍 Check Matches</button>
+              ${downloadBtnHtml}
+              <button onclick="deleteReport('${report.id}')" class="btn-delete">🗑️</button>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+
+      } catch (error) {
+        console.error("Error loading user reports:", error);
+        container.innerHTML = `<div class="empty-card">Error loading reports from cloud. Please check your internet connection.</div>`;
+      }
+    }
+
+    // Generate & Download Missing Report Poster (PNG)
+    function downloadMissingReport(docId) {
+      const report = window.userReportsMap[docId];
+      if (!report) return;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = 800;
+      canvas.height = 1050;
+      const ctx = canvas.getContext('2d');
+
+      // Background
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Top Red Alert Banner
+      ctx.fillStyle = '#dc2626';
+      ctx.fillRect(0, 0, canvas.width, 150);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 44px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('MISSING ALERT', canvas.width / 2, 72);
+
+      ctx.font = '600 22px sans-serif';
+      ctx.fillStyle = '#fee2e2';
+      ctx.fillText('FOUNDLY OFFICIAL RECOVERY REPORT', canvas.width / 2, 115);
+
+      // Photo Box
+      const boxX = 225, boxY = 185, boxW = 350, boxH = 320;
+      ctx.fillStyle = '#f1f5f9';
+      ctx.fillRect(boxX, boxY, boxW, boxH);
+      ctx.strokeStyle = '#cbd5e1';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(boxX, boxY, boxW, boxH);
+
+      const finishAndDownload = () => {
+        // Category Pill
+        ctx.fillStyle = '#fee2e2';
+        ctx.fillRect(250, 535, 300, 42);
+        ctx.fillStyle = '#dc2626';
+        ctx.font = 'bold 20px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText((report.category || 'ITEM').toUpperCase(), canvas.width / 2, 563);
+
+        // Item / Person Name
+        ctx.fillStyle = '#0f172a';
+        ctx.font = 'bold 40px sans-serif';
+        ctx.fillText(report.name || 'Missing Item', canvas.width / 2, 625);
+
+        // Details Section
+        ctx.textAlign = 'left';
+        const leftX = 70;
+        let curY = 690;
+
+        ctx.fillStyle = '#475569';
+        ctx.font = 'bold 22px sans-serif';
+        ctx.fillText('Last Seen Location:', leftX, curY);
+        ctx.fillStyle = '#0f172a';
+        ctx.font = '22px sans-serif';
+        const locText = `${report.landmark || ''}${report.landmark && report.city ? ', ' : ''}${report.city || 'Not specified'}`;
+        ctx.fillText(locText.substring(0, 42), leftX + 225, curY);
+
+        curY += 50;
+        ctx.fillStyle = '#475569';
+        ctx.font = 'bold 22px sans-serif';
+        ctx.fillText('Reported Date:', leftX, curY);
+        ctx.fillStyle = '#0f172a';
+        ctx.font = '22px sans-serif';
+        const dateStr = report.createdAt ? new Date(report.createdAt).toLocaleDateString() : new Date().toLocaleDateString();
+        ctx.fillText(dateStr, leftX + 225, curY);
+
+        if (report.description) {
+          curY += 50;
+          ctx.fillStyle = '#475569';
+          ctx.font = 'bold 22px sans-serif';
+          ctx.fillText('Details:', leftX, curY);
+          ctx.fillStyle = '#0f172a';
+          ctx.font = '20px sans-serif';
+          ctx.fillText(report.description.substring(0, 48), leftX + 100, curY);
+        }
+
+        // Contact Footer Box
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(50, 875, 700, 125);
+
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = 'bold 18px sans-serif';
+        ctx.fillText('IF FOUND, PLEASE CONTACT IMMEDIATELY', canvas.width / 2, 912);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 30px sans-serif';
+        ctx.fillText(`${report.contactName || userName}  •  ${report.contactPhone || fullPhone}`, canvas.width / 2, 956);
+
+        ctx.fillStyle = '#38bdf8';
+        ctx.font = '16px sans-serif';
+        ctx.fillText('Powered by Foundly App', canvas.width / 2, 986);
+
+        // Trigger Image Download
+        const link = document.createElement('a');
+        const safeName = (report.name || 'Report').replace(/[^a-z0-9]/gi, '_');
+        link.download = `Foundly_Missing_${safeName}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      };
+
+      if (report.photo) {
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        img.onload = () => {
+          ctx.drawImage(img, boxX + 4, boxY + 4, boxW - 8, boxH - 8);
+          finishAndDownload();
+        };
+        img.onerror = () => {
+          ctx.fillStyle = '#64748b';
+          ctx.font = 'bold 22px sans-serif';
+          ctx.fillText('Photo Attached in App', canvas.width / 2, boxY + boxH / 2);
+          finishAndDownload();
+        };
+        img.src = report.photo;
+      } else {
+        ctx.fillStyle = '#64748b';
+        ctx.font = 'bold 22px sans-serif';
+        ctx.fillText('No Photo Provided', canvas.width / 2, boxY + boxH / 2);
+        finishAndDownload();
+      }
+    }
+
+    function checkMatches(docId) {
+      db.collection("reports").doc(docId).get().then(doc => {
+        if (doc.exists) {
+          localStorage.setItem('foundly_active_report', JSON.stringify({ id: doc.id, ...doc.data() }));
+          window.location.href = "matches.html";
+        }
+      });
+    }
+
+    async function deleteReport(docId) {
+      if (confirm("Are you sure you want to delete this report?")) {
+        try {
+          await db.collection("reports").doc(docId).delete();
+          loadUserReports();
+        } catch (e) {
+          alert("Error deleting report: " + e.message);
+        }
+      }
+    }
+
+    async function deleteUserAccountData() {
+      if (!confirm("Warning: This will delete all your submitted reports and log you out. Continue?")) return;
+      try {
+        const ids = Object.keys(window.userReportsMap);
+        for (const id of ids) {
+          await db.collection("reports").doc(id).delete();
+        }
+        localStorage.clear();
+        alert("Your reports and account session have been deleted.");
+        window.location.href = "Login.html";
+      } catch (e) {
+        alert("Error deleting account data: " + e.message);
+      }
+    }
+
+    async function sendSupportMessage() {
+      const msg = document.getElementById('supportMessageInput').value.trim();
+      if (!msg) {
+        alert("Please write your message first.");
+        return;
+      }
+      try {
+        await db.collection("support_messages").add({
+          userName: userName,
+          userPhone: fullPhone,
+          message: msg,
+          createdAt: Date.now()
+        });
+        document.getElementById('supportMessageInput').value = "";
+        alert("Your message has been sent to Foundly Support!");
+      } catch (e) {
+        alert("Could not send message: " + e.message);
+      }
+    }
+
+    loadUserReports();
+  </script>
+</body>
+</html>

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Foundly - Login</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: #0f172a; color: #fff; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .card { background: #1e293b; border-radius: 16px; padding: 28px 24px; width: 100%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 1px solid #334155; }
+    h1 { font-size: 24px; margin-bottom: 6px; text-align: center; color: #38bdf8; }
+    p.sub { font-size: 14px; color: #94a3b8; text-align: center; margin-bottom: 24px; }
+    .input-group { margin-bottom: 16px; text-align: left; }
+    label { display: block; font-size: 12px; font-weight: 600; text-transform: uppercase; color: #cbd5e1; margin-bottom: 6px; }
+    input { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid #475569; background: #0f172a; color: #fff; font-size: 15px; outline: none; }
+    input:focus { border-color: #38bdf8; }
+    button { width: 100%; padding: 14px; border-radius: 10px; border: none; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.2s; margin-top: 8px; background: #0284c7; color: #fff; }
+    button:hover { background: #0369a1; }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h1>Foundly</h1>
+    <p class="sub">Enter your details to continue</p>
+
+    <div class="input-group">
+      <label>Full Name</label>
+      <input type="text" id="fullName" placeholder="e.g. Mohamed Azghar">
+    </div>
+
+    <div class="input-group">
+      <label>Mobile Number</label>
+      <input type="tel" id="phoneNumber" placeholder="e.g. 9876543210">
+    </div>
+
+    <button onclick="handleLogin()">Login to Dashboard →</button>
+  </div>
+
+  <script>
+    function handleLogin() {
+      const name = document.getElementById('fullName').value.trim();
+      const phone = document.getElementById('phoneNumber').value.trim();
+
+      if (!name || !phone) {
+        alert("Please enter both Name and Phone Number.");
+        return;
+      }
+
+      localStorage.setItem('foundly_user_name', name);
+      localStorage.setItem('foundly_raw_phone', phone);
+      localStorage.setItem('foundly_user_phone', phone); 
+
+      window.location.href = "index.html";
+    }
+  </script>
+</body>
+</html>

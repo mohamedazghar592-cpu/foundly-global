@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Foundly - Possible Matches</title>
+  
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <script>
+   const firebaseConfig = {
+  apiKey: "AIzaSyBFC_ONczuEP4TZLiPLI3bQAVaZmqoMZ7E",
+  authDomain: "foundlyglobal.firebaseapp.com",
+  projectId: "foundlyglobal",
+  storageBucket: "foundlyglobal.firebasestorage.app",
+  messagingSenderId: "281291658460",
+  appId: "1:281291658460:web:cca4ua314793cdb41f1019"
+};
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+  </script>
+  
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: #f1f5f9; min-height: 100vh; display: flex; justify-content: center; padding: 16px; padding-bottom: 40px; }
+    .matches-container { width: 100%; max-width: 480px; }
+    
+    .top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .top-left { display: flex; align-items: center; gap: 12px; }
+    .btn-back { background: #ffffff; border: 1px solid #cbd5e1; border-radius: 10px; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; text-decoration: none; color: #0f172a; }
+    .page-title { font-size: 20px; font-weight: 800; color: #0f172a; }
+
+    .user-report-summary { background: #ffffff; border-radius: 16px; padding: 16px; margin-bottom: 20px; border: 1.5px solid #2563eb; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.08); display: flex; gap: 14px; align-items: center; }
+    .summary-img { width: 70px; height: 70px; border-radius: 12px; object-fit: cover; background: #e2e8f0; flex-shrink: 0; }
+    .summary-text h3 { font-size: 16px; color: #0f172a; font-weight: 700; margin-bottom: 4px; }
+    .summary-text p { font-size: 12px; color: #64748b; line-height: 1.4; }
+    .summary-badge { display: inline-block; font-size: 10px; font-weight: 800; background: #fee2e2; color: #dc2626; padding: 2px 7px; border-radius: 5px; margin-bottom: 4px; text-transform: uppercase; }
+
+    .results-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .results-title { font-size: 15px; font-weight: 700; color: #1e293b; }
+    .match-count { font-size: 12px; font-weight: 700; background: #dbeafe; color: #1d4ed8; padding: 3px 8px; border-radius: 12px; }
+
+    .match-card { background: #ffffff; border-radius: 18px; padding: 16px; margin-bottom: 14px; border: 1px solid #e2e8f0; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03); }
+    .match-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+    .match-score-badge { font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 20px; background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+    .match-body { display: flex; gap: 14px; margin-bottom: 14px; }
+    .match-img { width: 80px; height: 80px; border-radius: 14px; object-fit: cover; background: #f1f5f9; flex-shrink: 0; }
+    .match-details h4 { font-size: 16px; color: #0f172a; font-weight: 700; margin-bottom: 4px; }
+    .match-details .match-info-line { font-size: 12.5px; color: #475569; margin-bottom: 3px; }
+    .match-details .match-desc { font-size: 12px; color: #64748b; margin-top: 6px; background: #f8fafc; padding: 6px 10px; border-radius: 8px; }
+
+    .contact-row { display: flex; gap: 10px; border-top: 1px solid #f1f5f9; padding-top: 12px; }
+    .btn-call { flex: 1; background: #10b981; color: #ffffff; border: none; padding: 11px; border-radius: 10px; font-size: 13.5px; font-weight: 600; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .btn-whatsapp { flex: 1; background: #2563eb; color: #ffffff; border: none; padding: 11px; border-radius: 10px; font-size: 13.5px; font-weight: 600; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px; }
+
+    .empty-state { text-align: center; padding: 40px 20px; background: #ffffff; border-radius: 16px; color: #64748b; border: 1px solid #e2e8f0; }
+  </style>
+</head>
+<body>
+
+  <div class="matches-container">
+    <div class="top-bar">
+      <div class="top-left">
+        <a href="report.html" class="btn-back">←</a>
+        <div class="page-title">Smart Percentage Matches</div>
+      </div>
+      <a href="index.html" class="btn-back" title="Home">🏠</a>
+    </div>
+
+    <div class="user-report-summary">
+      <img id="userReportImg" class="summary-img" src="" alt="Item">
+      <div class="summary-text">
+        <span class="summary-badge" id="userReportBadge">LOST REPORT</span>
+        <h3 id="userReportName"></h3>
+        <p id="userReportLocation"></p>
+      </div>
+    </div>
+
+    <div class="results-head">
+      <div class="results-title">AI Matching Engine Results</div>
+      <span class="match-count" id="matchCount">0 Matches</span>
+    </div>
+
+    <div id="matchesList"></div>
+  </div>
+
+  <script>
+    const activeReportRaw = localStorage.getItem('foundly_active_report');
+    const activeReport = activeReportRaw ? JSON.parse(activeReportRaw) : null;
+
+    if (activeReport) {
+      document.getElementById('userReportName').textContent = activeReport.name;
+      document.getElementById('userReportLocation').textContent = (activeReport.city || '') + " • " + (activeReport.landmark || '');
+      document.getElementById('userReportBadge').textContent = activeReport.type + " REPORT";
+      
+      if (activeReport.photo) {
+        document.getElementById('userReportImg').src = activeReport.photo;
+      } else {
+        document.getElementById('userReportImg').style.display = 'none';
+      }
+    }
+
+    async function runMatchEngine() {
+      const container = document.getElementById('matchesList');
+      container.innerHTML = `<div class="empty-state"><p>Calculating percentage matches from Cloud...</p></div>`;
+
+      if (!activeReport) {
+        container.innerHTML = `<div class="empty-state">No report submitted yet.</div>`;
+        return;
+      }
+
+      let allReports = [];
+      try {
+        const snapshot = await db.collection("reports").get();
+        snapshot.forEach(doc => {
+          let data = doc.data();
+          data.id = doc.id;
+          allReports.push(data);
+        });
+      } catch (error) {
+        console.error("Firestore loading error:", error);
+        container.innerHTML = `<div class="empty-state">Error connecting to cloud database.</div>`;
+        return;
+      }
+      container.innerHTML = "";
+
+      const targetType = activeReport.type === 'LOST' ? 'FOUND' : 'LOST';
+
+      // SMART FLEXIBLE MATCHING: Opposing type hona chahiye, aur category ya name me match milna chahiye
+      const potentialMatches = allReports.filter(item => {
+        if (item.type !== targetType || item.id === activeReport.id) return false;
+
+        // Flexible matching: Agar category match ho ya item name match ho jaye
+        const cat1 = (item.category || "").toLowerCase().trim();
+        const cat2 = (activeReport.category || "").toLowerCase().trim();
+        const name1 = (item.name || "").toLowerCase().trim();
+        const name2 = (activeReport.name || "").toLowerCase().trim();
+
+        const isCategoryMatch = cat1.includes(cat2) || cat2.includes(cat1);
+        const isNameMatch = name1.includes(name2) || name2.includes(name1);
+
+        return isCategoryMatch || isNameMatch;
+      });
+
+      if (potentialMatches.length === 0) {
+        document.getElementById('matchCount').textContent = "0 Matches";
+        container.innerHTML = `
+          <div class="empty-state">
+            <div style="font-size:36px; margin-bottom:10px;">🔍</div>
+            <h3 style="color:#0f172a; margin-bottom:6px;">No Matches Found Yet</h3>
+            <p style="font-size:13px; line-height:1.5;">No matching reports found yet. We will notify you once a matching report is submitted.</p>
+          </div>`;
+        return;
+      }
+
+      // Percentage calculation (Bus stops checkpoints)
+      let scoredMatches = potentialMatches.map(item => {
+        let score = 50; // Base score for flexible match
+
+        // Exact Name Match bonus (+30%)
+        if (item.name && activeReport.name && item.name.toLowerCase().trim() === activeReport.name.toLowerCase().trim()) {
+          score += 30; 
+        }
+
+        // Condition Match (+10%)
+        if (item.condition && activeReport.condition && item.condition === activeReport.condition) {
+          score += 10;
+        }
+
+        // Photo Available (+10%)
+        if (item.photo && activeReport.photo) {
+          score += 10;
+        }
+
+        if (score > 100) score = 100;
+        return { ...item, matchScore: score };
+      });
+
+      scoredMatches.sort((a, b) => b.matchScore - a.matchScore);
+      document.getElementById('matchCount').textContent = scoredMatches.length + " Match(es) Found";
+
+      scoredMatches.forEach(item => {
+        const card = document.createElement('div');
+        card.className = "match-card";
+        const photoSrc = item.photo ? item.photo : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" fill="%2394a3b8"><rect width="80" height="80" fill="%23f1f5f9"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="28">📦</text></svg>';
+
+        let badgeText = `⚡ ${item.matchScore}% Possible Match`;
+        let badgeColor = "#2563eb";
+        let badgeBg = "#dbeafe";
+
+        if (item.matchScore === 100) {
+          badgeText = "🔥 100% Perfect Match";
+          badgeColor = "#15803d";
+          badgeBg = "#dcfce7";
+        } else if (item.matchScore >= 70) {
+          badgeText = `⭐ ${item.matchScore}% High Match`;
+          badgeColor = "#b45309";
+          badgeBg = "#fef3c7";
+        }
+
+        let extraInfo = '';
+        if (item.category && (item.category.startsWith('Person') || item.category === 'Pets')) {
+           extraInfo = `<div class="match-info-line">👤 <strong>Age/Gender:</strong> ${item.age || '-'} / ${item.gender || '-'}</div>`;
+        }
+        if (item.reward) {
+           extraInfo += `<div class="match-info-line">🎁 <strong>Reward:</strong> <span style="color:#dc2626; font-weight:bold;">${item.reward}</span></div>`;
+        }
+
+        card.innerHTML = `
+          <div class="match-card-top">
+            <span style="font-size:11px; font-weight:800; color:#16a34a; background:#dcfce7; padding:3px 8px; border-radius:6px;">${item.type}</span>
+            <span class="match-score-badge" style="background:${badgeBg}; color:${badgeColor};">${badgeText}</span>
+          </div>
+
+          <div class="match-body">
+            <img src="${photoSrc}" class="match-img" alt="Item">
+            <div class="match-details">
+              <h4>${item.name}</h4>
+              <div class="match-info-line">📍 <strong>Area:</strong> ${item.landmark || ''}, ${item.city || ''}</div>
+              <div class="match-info-line">✨ <strong>Condition:</strong> ${item.condition || ''}</div>
+              ${extraInfo}
+              <div class="match-desc"><strong>Note:</strong> ${item.desc || 'No description provided'}</div>
+            </div>
+          </div>
+
+          <div class="contact-row">
+            <a href="tel:${item.contactPhone}" class="btn-call">📞 Call (${item.contactName})</a>
+            <a href="https://wa.me/${item.contactPhone ? item.contactPhone.replace(/[^0-9]/g, '') : ''}" target="_blank" class="btn-whatsapp">💬 WhatsApp</a>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    runMatchEngine();
+  </script>
+</body>
+</html>

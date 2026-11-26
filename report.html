@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Foundly - Report Item / Person</title>
+  
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <script>
+   const firebaseConfig = {
+  apiKey: "AIzaSyBFC_ONczuEP4TZLiPLI3bQAVaZmqoMZ7E",
+  authDomain: "foundlyglobal.firebaseapp.com",
+  projectId: "foundlyglobal",
+  storageBucket: "foundlyglobal.firebasestorage.app",
+  messagingSenderId: "281291658460",
+  appId: "1:281291658460:web:cca4ua314793cdb41f1019"
+};
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+  </script>
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: #f8fafc; min-height: 100vh; display: flex; justify-content: center; padding: 16px; padding-bottom: 40px; }
+    .form-container { width: 100%; max-width: 480px; }
+    
+    .top-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+    .btn-back { background: #ffffff; border: 1px solid #cbd5e1; border-radius: 10px; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; text-decoration: none; color: #0f172a; }
+    .page-title { font-size: 20px; font-weight: 800; color: #0f172a; }
+    
+    .report-badge { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 800; text-transform: uppercase; margin-bottom: 14px; }
+    .badge-lost { background: #fee2e2; color: #dc2626; }
+    .badge-found { background: #dcfce7; color: #16a34a; }
+    
+    .section-card { background: #ffffff; border-radius: 18px; padding: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.03); margin-bottom: 16px; }
+    .section-title { font-size: 14.5px; font-weight: 700; color: #1e293b; margin-bottom: 14px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
+    
+    .form-group { margin-bottom: 14px; }
+    .form-label { display: block; font-size: 12.5px; font-weight: 600; color: #475569; margin-bottom: 6px; }
+    .form-input, .form-select, .form-textarea { width: 100%; padding: 12px 14px; font-size: 14px; border: 1.5px solid #cbd5e1; border-radius: 10px; outline: none; background: #f8fafc; color: #0f172a; }
+    .form-input:focus, .form-select:focus, .form-textarea:focus { background: #ffffff; border-color: #2563eb; }
+    .form-textarea { resize: vertical; min-height: 75px; }
+    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    
+    .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 6px; }
+    .photo-upload-slot { border: 2px dashed #cbd5e1; border-radius: 12px; height: 90px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; background: #f8fafc; position: relative; overflow: hidden; }
+    .photo-upload-slot input { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+    .photo-upload-slot span { font-size: 20px; margin-bottom: 2px; }
+    .photo-upload-slot small { font-size: 10.5px; color: #64748b; font-weight: 600; }
+    .photo-preview { width: 100%; height: 100%; object-fit: cover; display: none; position: absolute; top: 0; left: 0; }
+    
+    .btn-submit { width: 100%; background: #2563eb; color: #ffffff; border: none; padding: 15px; border-radius: 14px; font-size: 15px; font-weight: 700; cursor: pointer; box-shadow: 0 8px 18px rgba(37, 99, 235, 0.25); margin-bottom: 12px; }
+    .btn-download-a4 { width: 100%; background: #0f172a; color: #ffffff; border: none; padding: 13px; border-radius: 14px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+
+    #printArea { display: none; }
+    @media print {
+      body * { visibility: hidden; }
+      #printArea, #printArea * { visibility: visible; }
+      #printArea { display: block; position: absolute; left: 0; top: 0; width: 100%; padding: 24px; color: #000; }
+      .a4-border { border: 4px solid #dc2626; padding: 24px; min-height: 95vh; border-radius: 12px; }
+      .a4-border.found-theme { border-color: #16a34a; }
+      .a4-header { text-align: center; background: #dc2626; color: #fff; padding: 14px; font-size: 32px; font-weight: 900; letter-spacing: 2px; margin-bottom: 20px; }
+      .a4-header.found { background: #16a34a; }
+      .a4-grid { display: flex; gap: 20px; margin-bottom: 20px; }
+      .a4-photo-box { width: 220px; height: 220px; border: 2px solid #333; display: flex; align-items: center; justify-content: center; }
+      .a4-photo-box img { width: 100%; height: 100%; object-fit: cover; }
+      .a4-details-table { flex: 1; font-size: 16px; line-height: 1.8; }
+      .a4-contact-footer { border-top: 2px dashed #999; margin-top: 30px; padding-top: 15px; text-align: center; font-size: 20px; font-weight: bold; }
+      .priority-tag { display: inline-block; padding: 4px 10px; border-radius: 4px; font-size: 14px; font-weight: bold; background: #fee2e2; color: #dc2626; margin-bottom: 10px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="form-container">
+    <div class="top-bar">
+      <a href="index.html" class="btn-back">←</a>
+      <div class="page-title">Submit Report</div>
+    </div>
+
+    <span id="reportTypeBadge" class="report-badge badge-lost">LOST REPORT</span>
+
+    <form id="reportForm" onsubmit="handleFormSubmit(event)">
+      
+      <!-- SECTION 1: Core Details -->
+      <div class="section-card">
+        <div class="section-title">1. What are you reporting?</div>
+
+        <!-- CATEGORY WITH ICONS -->
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <select id="itemCategory" class="form-select" onchange="updateFormBasedOnCategory()" required>
+            <option value="">-- Select Category --</option>
+            <optgroup label="👤 People (Urgent)">
+              <option value="Person - Child">👶 Missing Child</option>
+              <option value="Person - Adult/Elderly">👤 Missing Adult / Elderly</option>
+            </optgroup>
+            <optgroup label="🐾 Living Pets">
+              <option value="Pets">🐶 Pets (Dog, Cat, Bird)</option>
+            </optgroup>
+            <optgroup label="📱 Items & Valuables">
+              <option value="Electronics">📱 Electronics (Mobile, Laptop)</option>
+              <option value="Jewelry">💍 Jewelry & Valuables</option>
+              <option value="Bags & Wallets">👜 Wallets, Bags & Purse</option>
+              <option value="Keys">🔑 Keys</option>
+              <option value="Documents">📄 Documents & Cards</option>
+              <option value="Other">📦 Other Items</option>
+            </optgroup>
+          </select>
+        </div>
+
+        <!-- ITEM NAME AS SMART DROPDOWN -->
+        <div class="form-group">
+          <label id="itemNameLabel" class="form-label">Item Name / Title</label>
+          <select id="itemName" class="form-select" required>
+            <option value="">-- First Select Category --</option>
+          </select>
+        </div>
+
+        <!-- SMART CONDITION -->
+        <div class="form-group" id="conditionFieldGroup">
+          <label class="form-label">Condition / Status</label>
+          <select id="itemCondition" class="form-select">
+            <!-- JS will fill this -->
+          </select>
+        </div>
+
+        <!-- MISSING PERSON / PET DETAILS -->
+        <div class="row-2" id="personDetailsGroup" style="display: none;">
+          <div class="form-group">
+            <label class="form-label">Age</label>
+            <input type="number" id="personAge" class="form-input" placeholder="e.g. 6">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Gender</label>
+            <select id="personGender" class="form-select">
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- REWARD FIELD (Only for Missing) -->
+        <div class="form-group" id="rewardGroup" style="display: none;">
+          <label class="form-label">Reward (Optional)</label>
+          <input type="text" id="rewardAmount" class="form-input" placeholder="e.g. 500 SAR or None">
+        </div>
+
+        <!-- PHOTOS -->
+        <div class="form-group">
+          <label class="form-label">Upload Photos (Max 3)</label>
+          <div class="photo-grid">
+            <div class="photo-upload-slot"><input type="file" accept="image/*" onchange="previewPhoto(event, 'p1')"><span>📷</span><small>Photo 1</small><img id="p1" class="photo-preview"></div>
+            <div class="photo-upload-slot"><input type="file" accept="image/*" onchange="previewPhoto(event, 'p2')"><span>📷</span><small>Photo 2</small><img id="p2" class="photo-preview"></div>
+            <div class="photo-upload-slot"><input type="file" accept="image/*" onchange="previewPhoto(event, 'p3')"><span>📷</span><small>Photo 3</small><img id="p3" class="photo-preview"></div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Description / Identifying Marks</label>
+          <textarea id="itemDesc" class="form-textarea" placeholder="Describe color, special marks, clothes, or covers..."></textarea>
+        </div>
+      </div>
+
+      <!-- SECTION 2: Location & Time -->
+      <div class="section-card">
+        <div class="section-title">2. Location & Time Details</div>
+        <div class="row-2">
+          <div class="form-group">
+            <label class="form-label">Country</label>
+            <select id="locCountry" class="form-select" required>
+              <option value="Saudi Arabia">Saudi Arabia 🇸🇦</option>
+              <option value="India">India 🇮🇳</option>
+              <option value="UAE">UAE 🇦🇪</option>
+              <option value="USA">USA 🇺🇸</option>
+              <option value="UK">UK 🇬🇧</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">District / City</label>
+            <input type="text" id="locCity" class="form-input" placeholder="e.g. Al Khobar / Bangalore" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Specific Area / Last Seen Landmark</label>
+          <input type="text" id="locLandmark" class="form-input" placeholder="e.g. Food court near Table 4" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Last Seen Date & Time</label>
+          <input type="datetime-local" id="lastSeenTime" class="form-input" required>
+        </div>
+      </div>
+
+      <!-- SECTION 3: Contact -->
+      <div class="section-card">
+        <div class="section-title">3. Contact Information</div>
+        
+        <div class="form-group">
+          <label class="form-label">Reporter Name (Click to edit)</label>
+          <input type="text" id="contactName" class="form-input" placeholder="Enter name" required style="background:#ffffff;">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Contact Phone (Click to edit)</label>
+          <input type="tel" id="contactPhone" class="form-input" placeholder="Enter phone number" required style="background:#ffffff;">
+        </div>
+      </div>
+      <button type="submit" class="btn-submit" id="submitBtn">Search Possible Matches →</button>
+      <button type="button" class="btn-download-a4" onclick="downloadA4Poster()">📄 Download A4 Missing Sheet (PDF / Print)</button>
+    </form>
+  </div>
+
+  <script>
+    const reportType = localStorage.getItem('foundly_report_type') || 'LOST';
+    const badge = document.getElementById('reportTypeBadge');
+    badge.textContent = reportType + " REPORT";
+    if (reportType === 'FOUND') {
+      badge.className = 'report-badge badge-found';
+    }
+
+    // Auto-populate Contact
+    document.getElementById('contactName').value = localStorage.getItem('foundly_user_name') || '';
+    const code = localStorage.getItem('foundly_country_code') || '';
+    const phone = localStorage.getItem('foundly_raw_phone') || '';
+    document.getElementById('contactPhone').value = code + " " + phone;
+
+    const categoryItems = {
+      "Person - Child": ["Missing Boy (Child)", "Missing Girl (Child)", "Infant / Toddler"],
+      "Person - Adult/Elderly": ["Adult Male", "Adult Female", "Elderly Grandfather", "Elderly Grandmother"],
+      "Pets": ["German Shepherd Dog", "Labrador Dog", "Cute Cat", "Talking Parrot", "Rabbit", "Other Pet"],
+      "Electronics": ["Smartphone (iPhone / Samsung)", "Laptop (MacBook / Dell / HP)", "Wireless Earbuds / AirPods", "Tablet / iPad", "Smartwatch", "Power Bank", "Digital Camera"],
+      "Jewelry": ["Gold Chain", "Gold Ring", "Diamond Earring", "Silver Bracelet", "Luxury Watch", "Gold Necklace", "Gold Bangles"],
+      "Bags & Wallets": ["Leather Wallet", "Handbag / Purse", "School Backpack", "Travel Trolley Bag", "Laptop Bag"],
+      "Keys": ["Car Keys (Remote)", "Bike / Scooter Keys", "House Main Door Keys", "Office Keys Bundle"],
+      "Documents": ["Aadhaar Card", "PAN Card", "Driving License", "Passport", "College ID Card", "ATM Debit / Credit Card", "Office ID Card"],
+      "Other": ["Spectacles / Glasses", "Clothing Jacket / Hoodie", "Sports Equipment", "Water Bottle / Flask", "Other Valuable Item"]
+    };
+
+    function updateFormBasedOnCategory() {
+      const category = document.getElementById('itemCategory').value;
+      const itemNameLabel = document.getElementById('itemNameLabel');
+      const itemNameSelect = document.getElementById('itemName');
+      const conditionSelect = document.getElementById('itemCondition');
+      const personDetailsGroup = document.getElementById('personDetailsGroup');
+      const rewardGroup = document.getElementById('rewardGroup');
+
+      itemNameSelect.innerHTML = '<option value="">-- Select Item Name --</option>';
+      conditionSelect.innerHTML = '';
+      personDetailsGroup.style.display = 'none';
+      rewardGroup.style.display = 'none';
+      
+      if (!category) return;
+
+      if (categoryItems[category]) {
+        categoryItems[category].forEach(itemName => {
+          const opt = document.createElement('option');
+          opt.value = itemName;
+          opt.textContent = itemName;
+          itemNameSelect.appendChild(opt);
+        });
+      }
+
+      if (category.startsWith('Person')) {
+        itemNameLabel.textContent = "Select Person Profile / Title";
+        personDetailsGroup.style.display = 'grid';
+        rewardGroup.style.display = 'block';
+        
+        conditionSelect.innerHTML = `
+          <option value="Healthy">Healthy</option>
+          <option value="Injured">Injured / Needs Medical Help</option>
+          <option value="Mental Health Condition">Mental Health Condition</option>
+          <option value="Alzheimer / Dementia">Alzheimer / Dementia</option>
+          <option value="Autistic / Special Needs">Autistic / Special Needs</option>
+        `;
+      } else if (category === 'Pets') {
+        itemNameLabel.textContent = "Select Pet Name / Breed Type";
+        personDetailsGroup.style.display = 'grid';
+        conditionSelect.innerHTML = `
+          <option value="Friendly">Friendly / Approachable</option>
+          <option value="Aggressive">Aggressive / Bites</option>
+          <option value="Injured">Injured / Sick</option>
+          <option value="Needs Medication">Needs Medication</option>
+          <option value="Scared">Scared / Shy</option>
+        `;
+      } else {
+        itemNameLabel.textContent = "Select Specific Item Name";
+        conditionSelect.innerHTML = `
+          <option value="Brand New">Brand New</option>
+          <option value="Good / Like New">Good / Like New</option>
+          <option value="Scratched / Used">Scratched / Used</option>
+          <option value="Damaged / Broken">Damaged / Broken</option>
+        `;
+      }
+    }
+
+   // Image Preview with Automatic Compression (Under 1MB for Firebase)
+    let mainImageData = "";
+    function previewPhoto(event, id) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const imgElement = document.getElementById(id);
+          const img = new Image();
+          img.src = e.target.result;
+          img.onload = function() {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 600;
+            const MAX_HEIGHT = 600;
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+              if (width > MAX_WIDTH) {
+                height *= MAX_WIDTH / width;
+                width = MAX_WIDTH;
+              }
+            } else {
+              if (height > MAX_HEIGHT) {
+                width *= MAX_HEIGHT / height;
+                height = MAX_HEIGHT;
+              }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+            
+            imgElement.src = compressedDataUrl;
+            imgElement.style.display = 'block';
+            if (id === 'p1') mainImageData = compressedDataUrl;
+          };
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // SUBMIT FORM TO FIREBASE CLOUD DATABASE
+    async function handleFormSubmit(e) {
+      e.preventDefault();
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Saving to Cloud Database...";
+      
+      const newReport = {
+        type: reportType,
+        category: document.getElementById('itemCategory').value,
+        name: document.getElementById('itemName').value,
+        condition: document.getElementById('itemCondition').value,
+        age: document.getElementById('personAge') ? document.getElementById('personAge').value : '',
+        gender: document.getElementById('personGender') ? document.getElementById('personGender').value : '',
+        reward: document.getElementById('rewardAmount') ? document.getElementById('rewardAmount').value : '',
+        desc: document.getElementById('itemDesc').value.trim(),
+        country: document.getElementById('locCountry').value,
+        city: document.getElementById('locCity').value.trim(),
+        landmark: document.getElementById('locLandmark').value.trim(),
+        lastSeenTime: document.getElementById('lastSeenTime').value,
+        contactName: document.getElementById('contactName').value,
+        contactPhone: document.getElementById('contactPhone').value,
+        photo: mainImageData,
+        createdAt: new Date().toISOString()
+      };
+
+      try {
+        // Save to Firebase Cloud Firestore
+        const docRef = await db.collection("reports").add(newReport);
+        newReport.id = docRef.id;
+
+        // Also save active report locally for summary on match page
+        localStorage.setItem('foundly_active_report', JSON.stringify(newReport));
+
+        window.location.href = "matches.html";
+      } catch (error) {
+        alert("Error saving report to cloud: " + error.message);
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Search Possible Matches →";
+      }
+    }
+  </script>
+</body>
+</html>
