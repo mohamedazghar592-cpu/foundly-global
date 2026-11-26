@@ -113,9 +113,8 @@
       <a href="Login.html" class="btn-logout" onclick="localStorage.clear()">Logout</a>
     </div>
 
-    <!-- TAB 1: HOME DASHBOARD (Original Content) -->
+    <!-- TAB 1: HOME DASHBOARD -->
     <div id="tab-home" class="tab-view active">
-      <!-- Lost Button -->
       <a href="#" onclick="startReport('LOST')" class="action-card-lost">
         <div class="action-content">
           <h3>I Lost Something</h3>
@@ -124,7 +123,6 @@
         <div class="action-icon">🚨</div>
       </a>
 
-      <!-- Found Button -->
       <a href="#" onclick="startReport('FOUND')" class="action-card-found">
         <div class="action-content">
           <h3>I Found Something</h3>
@@ -198,7 +196,7 @@
           <ul>
             <li><strong>1. Submit a Report:</strong> Tap <em>"I Lost Something"</em> or <em>"I Found Something"</em>, add a clear photo, item title, and last seen area.</li>
             <li><strong>2. Smart Matching:</strong> Tap <em>"Check Matches"</em> on your report card to view opposite reports in the same category across all locations.</li>
-            <li><strong>3. Share Missing Poster:</strong> For lost items/persons, use the <em>"Download"</em> button to save an official missing poster and share it on WhatsApp or local groups.</li>
+            <li><strong>3. Share Official A4 Sheet:</strong> For lost items/persons, use the <em>"Download"</em> button to save the official A4 missing report and share it on WhatsApp or local groups.</li>
             <li><strong>4. Close Report:</strong> Once your item is recovered, delete your report from the dashboard.</li>
           </ul>
         </div>
@@ -336,7 +334,6 @@
 
         document.getElementById('reportCountBadge').textContent = reports.length + " Reports";
 
-        // Update Profile Stats
         const lostCount = reports.filter(r => r.type === 'LOST').length;
         const foundCount = reports.filter(r => r.type === 'FOUND').length;
         document.getElementById('statTotal').textContent = reports.length;
@@ -364,7 +361,6 @@
           const badgeClass = isLost ? 'badge-lost' : 'badge-found';
           const photoSrc = report.photo ? report.photo : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="55" height="55" fill="%2394a3b8"><rect width="55" height="55" fill="%23f1f5f9"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="20">📦</text></svg>';
 
-          // Download button ONLY shown for LOST (Missing) reports
           const downloadBtnHtml = isLost
             ? `<button onclick="downloadMissingReport('${report.id}')" class="btn-download">📥 Download</button>`
             : '';
@@ -396,108 +392,285 @@
       }
     }
 
-    // Generate & Download Missing Report Poster (PNG)
+    // Official Structured A4 Missing Report Sheet Generator (794 x 1123 px)
     function downloadMissingReport(docId) {
       const report = window.userReportsMap[docId];
       if (!report) return;
 
       const canvas = document.createElement('canvas');
-      canvas.width = 800;
-      canvas.height = 1050;
+      canvas.width = 794;   // Standard A4 Width
+      canvas.height = 1123; // Standard A4 Height
       const ctx = canvas.getContext('2d');
 
-      // Background
+      const isPerson = (report.category || '').startsWith('Person');
+      const primaryColor = '#dc2626';
+      const darkSlate = '#0f172a';
+      const labelBg = '#f8fafc';
+      const borderGray = '#cbd5e1';
+
+      // 1. Crisp White A4 Page
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Top Red Alert Banner
-      ctx.fillStyle = '#dc2626';
-      ctx.fillRect(0, 0, canvas.width, 150);
+      // 2. Official Double Border Frame
+      const pad = 26;
+      ctx.strokeStyle = primaryColor;
+      ctx.lineWidth = 4;
+      ctx.strokeRect(pad, pad, canvas.width - pad * 2, canvas.height - pad * 2);
+
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(pad + 6, pad + 6, canvas.width - (pad + 6) * 2, canvas.height - (pad + 6) * 2);
+
+      const innerX = pad + 22;
+      const innerW = canvas.width - innerX * 2;
+
+      // 3. Top Official Header Banner
+      ctx.fillStyle = primaryColor;
+      ctx.fillRect(innerX, pad + 20, innerW, 86);
 
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 44px sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('MISSING ALERT', canvas.width / 2, 72);
+      ctx.font = 'bold 13px sans-serif';
+      ctx.fillText('FOUNDLY GLOBAL RECOVERY NETWORK • OFFICIAL PUBLIC NOTICE', canvas.width / 2, pad + 44);
 
-      ctx.font = '600 22px sans-serif';
-      ctx.fillStyle = '#fee2e2';
-      ctx.fillText('FOUNDLY OFFICIAL RECOVERY REPORT', canvas.width / 2, 115);
+      ctx.font = '900 32px sans-serif';
+      ctx.fillText(isPerson ? 'MISSING PERSON ALERT' : 'OFFICIAL MISSING REPORT', canvas.width / 2, pad + 82);
 
-      // Photo Box
-      const boxX = 225, boxY = 185, boxW = 350, boxH = 320;
-      ctx.fillStyle = '#f1f5f9';
-      ctx.fillRect(boxX, boxY, boxW, boxH);
-      ctx.strokeStyle = '#cbd5e1';
-      ctx.lineWidth = 3;
-      ctx.strokeRect(boxX, boxY, boxW, boxH);
+      // 4. Case ID & Date Metadata Strip
+      const stripY = pad + 114;
+      ctx.fillStyle = '#fef2f2';
+      ctx.fillRect(innerX, stripY, innerW, 34);
+      ctx.strokeStyle = '#fecaca';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(innerX, stripY, innerW, 34);
 
-      const finishAndDownload = () => {
-        // Category Pill
-        ctx.fillStyle = '#fee2e2';
-        ctx.fillRect(250, 535, 300, 42);
-        ctx.fillStyle = '#dc2626';
-        ctx.font = 'bold 20px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText((report.category || 'ITEM').toUpperCase(), canvas.width / 2, 563);
+      const caseId = 'FND-' + String(docId || Date.now()).slice(-6).toUpperCase();
+      const reportDate = report.createdAt ? new Date(report.createdAt).toLocaleDateString('en-GB') : new Date().toLocaleDateString('en-GB');
+      const priorityLabel = isPerson ? 'STATUS: URGENT / HIGH PRIORITY' : 'STATUS: ACTIVE MISSING CASE';
 
-        // Item / Person Name
-        ctx.fillStyle = '#0f172a';
-        ctx.font = 'bold 40px sans-serif';
-        ctx.fillText(report.name || 'Missing Item', canvas.width / 2, 625);
+      ctx.fillStyle = primaryColor;
+      ctx.font = 'bold 13px sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(`CASE ID: ${caseId}`, innerX + 12, stripY + 22);
 
-        // Details Section
+      ctx.textAlign = 'center';
+      ctx.fillText(priorityLabel, canvas.width / 2, stripY + 22);
+
+      ctx.textAlign = 'right';
+      ctx.fillText(`DATE: ${reportDate}`, innerX + innerW - 12, stripY + 22);
+
+      // 5. Upper Section: Photo Box (Left) + Structured Details Table (Right)
+      const upperY = stripY + 48;
+      const photoW = 215;
+      const photoH = 245;
+
+      // Photo Outer Box
+      ctx.fillStyle = '#f8fafc';
+      ctx.fillRect(innerX, upperY, photoW, photoH);
+      ctx.strokeStyle = '#334155';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(innerX, upperY, photoW, photoH);
+
+      // Photo Caption Strip at bottom of photo box
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(innerX, upperY + photoH - 26, photoW, 26);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 11px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('REFERENCE PHOTOGRAPH', innerX + photoW / 2, upperY + photoH - 9);
+
+      // Helper to draw bordered table row
+      function drawTableRow(label, value, x, y, totalW, labelColW, rowH) {
+        // Label cell
+        ctx.fillStyle = labelBg;
+        ctx.fillRect(x, y, labelColW, rowH);
+        ctx.strokeStyle = borderGray;
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x, y, labelColW, rowH);
+
+        // Value cell
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(x + labelColW, y, totalW - labelColW, rowH);
+        ctx.strokeRect(x + labelColW, y, totalW - labelColW, rowH);
+
+        // Label text
+        ctx.fillStyle = '#334155';
+        ctx.font = 'bold 13px sans-serif';
         ctx.textAlign = 'left';
-        const leftX = 70;
-        let curY = 690;
+        ctx.fillText(label, x + 10, y + 23);
 
-        ctx.fillStyle = '#475569';
-        ctx.font = 'bold 22px sans-serif';
-        ctx.fillText('Last Seen Location:', leftX, curY);
-        ctx.fillStyle = '#0f172a';
-        ctx.font = '22px sans-serif';
-        const locText = `${report.landmark || ''}${report.landmark && report.city ? ', ' : ''}${report.city || 'Not specified'}`;
-        ctx.fillText(locText.substring(0, 42), leftX + 225, curY);
+        // Value text (wrapped up to 2 lines if needed)
+        ctx.fillStyle = darkSlate;
+        ctx.font = 'bold 14px sans-serif';
+        const maxValW = totalW - labelColW - 20;
+        const words = String(value || 'Not Specified').split(' ');
+        let line1 = '', line2 = '';
+        for (let w of words) {
+          if (ctx.measureText(line1 + w).width <= maxValW && !line2) {
+            line1 += w + ' ';
+          } else {
+            line2 += w + ' ';
+          }
+        }
+        if (line2.trim()) {
+          ctx.fillText(line1.trim(), x + labelColW + 10, y + 18);
+          ctx.font = '13px sans-serif';
+          ctx.fillText(line2.trim().substring(0, 58), x + labelColW + 10, y + 36);
+        } else {
+          ctx.fillText(line1.trim(), x + labelColW + 10, y + 23);
+        }
+        return y + rowH;
+      }
 
-        curY += 50;
-        ctx.fillStyle = '#475569';
-        ctx.font = 'bold 22px sans-serif';
-        ctx.fillText('Reported Date:', leftX, curY);
-        ctx.fillStyle = '#0f172a';
-        ctx.font = '22px sans-serif';
-        const dateStr = report.createdAt ? new Date(report.createdAt).toLocaleDateString() : new Date().toLocaleDateString();
-        ctx.fillText(dateStr, leftX + 225, curY);
+      const renderRemainingSheet = () => {
+        const tableX = innerX + photoW + 16;
+        const tableW = innerW - photoW - 16;
+        let curY = upperY;
 
-        if (report.description) {
-          curY += 50;
-          ctx.fillStyle = '#475569';
-          ctx.font = 'bold 22px sans-serif';
-          ctx.fillText('Details:', leftX, curY);
-          ctx.fillStyle = '#0f172a';
-          ctx.font = '20px sans-serif';
-          ctx.fillText(report.description.substring(0, 48), leftX + 100, curY);
+        // Right Table Header
+        ctx.fillStyle = darkSlate;
+        ctx.fillRect(tableX, curY, tableW, 30);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 13px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText('1. SUBJECT / ITEM IDENTIFICATION', tableX + 10, curY + 20);
+        curY += 30;
+
+        curY = drawTableRow('Subject / Title', report.name || 'Missing Item', tableX, curY, tableW, 130, 42);
+        curY = drawTableRow('Category', report.category || 'General', tableX, curY, tableW, 130, 38);
+
+        if (report.age || report.gender) {
+          const ag = [report.age ? `${report.age} Years` : '', report.gender || ''].filter(Boolean).join(' / ');
+          curY = drawTableRow('Age & Gender', ag, tableX, curY, tableW, 130, 38);
         }
 
-        // Contact Footer Box
-        ctx.fillStyle = '#0f172a';
-        ctx.fillRect(50, 875, 700, 125);
+        curY = drawTableRow('Condition', report.condition || 'Not Specified', tableX, curY, tableW, 130, 38);
 
-        ctx.textAlign = 'center';
-        ctx.fillStyle = '#94a3b8';
-        ctx.font = 'bold 18px sans-serif';
-        ctx.fillText('IF FOUND, PLEASE CONTACT IMMEDIATELY', canvas.width / 2, 912);
+        if (report.reward) {
+          curY = drawTableRow('Reward Offered', report.reward, tableX, curY, tableW, 130, 38);
+        }
+
+        // 6. Full-Width Section 2: Incident & Location Particulars
+        let sec2Y = Math.max(curY + 18, upperY + photoH + 18);
+        ctx.fillStyle = darkSlate;
+        ctx.fillRect(innerX, sec2Y, innerW, 30);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 13px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText('2. LAST SEEN LOCATION & INCIDENT DETAILS', innerX + 12, sec2Y + 20);
+        sec2Y += 30;
+
+        const locStr = [report.landmark, report.city, report.country].filter(Boolean).join(', ') || 'Not Specified';
+        sec2Y = drawTableRow('Last Seen Area', locStr, innerX, sec2Y, innerW, 185, 44);
+
+        const seenTimeStr = report.lastSeenTime
+          ? new Date(report.lastSeenTime).toLocaleString('en-GB')
+          : reportDate;
+        sec2Y = drawTableRow('Date & Time Seen', seenTimeStr, innerX, sec2Y, innerW, 185, 38);
+
+        // Multi-line Description Box
+        const descText = report.desc || report.description || 'No additional description provided.';
+        const descBoxH = 92;
+        ctx.fillStyle = labelBg;
+        ctx.fillRect(innerX, sec2Y, 185, descBoxH);
+        ctx.strokeStyle = borderGray;
+        ctx.strokeRect(innerX, sec2Y, 185, descBoxH);
 
         ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 30px sans-serif';
-        ctx.fillText(`${report.contactName || userName}  •  ${report.contactPhone || fullPhone}`, canvas.width / 2, 956);
+        ctx.fillRect(innerX + 185, sec2Y, innerW - 185, descBoxH);
+        ctx.strokeRect(innerX + 185, sec2Y, innerW - 185, descBoxH);
 
-        ctx.fillStyle = '#38bdf8';
-        ctx.font = '16px sans-serif';
-        ctx.fillText('Powered by Foundly App', canvas.width / 2, 986);
+        ctx.fillStyle = '#334155';
+        ctx.font = 'bold 13px sans-serif';
+        ctx.fillText('Identifying Marks', innerX + 10, sec2Y + 24);
+        ctx.font = '12px sans-serif';
+        ctx.fillStyle = '#64748b';
+        ctx.fillText('& Description', innerX + 10, sec2Y + 42);
 
-        // Trigger Image Download
+        // Wrap description up to 4 lines
+        ctx.fillStyle = darkSlate;
+        ctx.font = '13.5px sans-serif';
+        const dWords = String(descText).split(' ');
+        let dLine = '', dY = sec2Y + 24, linesDrawn = 0;
+        const maxDescW = innerW - 205;
+        for (let i = 0; i < dWords.length; i++) {
+          const test = dLine + dWords[i] + ' ';
+          if (ctx.measureText(test).width > maxDescW && i > 0) {
+            if (linesDrawn < 3) {
+              ctx.fillText(dLine.trim(), innerX + 195, dY);
+              dLine = dWords[i] + ' ';
+              dY += 20;
+              linesDrawn++;
+            } else {
+              dLine = dLine.trim() + '...';
+              break;
+            }
+          } else {
+            dLine = test;
+          }
+        }
+        ctx.fillText(dLine.trim(), innerX + 195, dY);
+        sec2Y += descBoxH + 18;
+
+        // 7. Section 3: Foundly Official Rules & Handover Guidelines
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(innerX, sec2Y, innerW, 28);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 12.5px sans-serif';
+        ctx.fillText('3. FOUNDLY OFFICIAL SAFETY, VERIFICATION & HANDOVER GUIDELINES', innerX + 12, sec2Y + 19);
+        sec2Y += 28;
+
+        const rulesH = 112;
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillRect(innerX, sec2Y, innerW, rulesH);
+        ctx.strokeStyle = borderGray;
+        ctx.strokeRect(innerX, sec2Y, innerW, rulesH);
+
+        const rulesList = [
+          '• Safe Public Handover: Always arrange item/person handover at a crowded public spot or nearest police station.',
+          '• Mandatory Proof Check: Verify serial numbers, government ID, or unique identifying marks before handover.',
+          '• Zero Advance Payment Rule: Never pay courier fees or advance money online prior to physical verification.',
+          '• Emergency Law Enforcement: For missing persons/children, immediately alert local police alongside calling below.'
+        ];
+        ctx.fillStyle = '#334155';
+        ctx.font = '12.5px sans-serif';
+        let rY = sec2Y + 22;
+        rulesList.forEach(r => {
+          ctx.fillText(r, innerX + 12, rY);
+          rY += 23;
+        });
+
+        // 8. Official Contact & Verification Footer Box
+        const footerY = canvas.height - pad - 122;
+        ctx.fillStyle = '#fef2f2';
+        ctx.fillRect(innerX, footerY, innerW, 84);
+        ctx.strokeStyle = primaryColor;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(innerX, footerY, innerW, 84);
+
+        ctx.textAlign = 'center';
+        ctx.fillStyle = primaryColor;
+        ctx.font = 'bold 13px sans-serif';
+        ctx.fillText('IF FOUND OR SEEN, PLEASE CONTACT REPORTER IMMEDIATELY:', canvas.width / 2, footerY + 24);
+
+        ctx.fillStyle = darkSlate;
+        ctx.font = '900 24px sans-serif';
+        ctx.fillText(`${report.contactName || userName}   •   ${report.contactPhone || fullPhone}`, canvas.width / 2, footerY + 55);
+
+        ctx.fillStyle = '#475569';
+        ctx.font = '12px sans-serif';
+        ctx.fillText('Verified Digital Report • Foundly Global Recovery System', canvas.width / 2, footerY + 74);
+
+        // Bottom Disclaimer Line
+        ctx.fillStyle = '#64748b';
+        ctx.font = '11px sans-serif';
+        ctx.fillText('This A4 sheet is system-generated by Foundly for public awareness & safe recovery assistance.', canvas.width / 2, canvas.height - pad - 14);
+
+        // Trigger PNG Download
         const link = document.createElement('a');
-        const safeName = (report.name || 'Report').replace(/[^a-z0-9]/gi, '_');
-        link.download = `Foundly_Missing_${safeName}.png`;
+        const safeName = (report.name || 'Missing_Report').replace(/[^a-z0-9]/gi, '_');
+        link.download = `Foundly_Official_A4_${safeName}.png`;
         link.href = canvas.toDataURL('image/png');
         link.click();
       };
@@ -506,21 +679,23 @@
         const img = new Image();
         img.crossOrigin = 'Anonymous';
         img.onload = () => {
-          ctx.drawImage(img, boxX + 4, boxY + 4, boxW - 8, boxH - 8);
-          finishAndDownload();
+          ctx.drawImage(img, innerX + 3, upperY + 3, photoW - 6, photoH - 30);
+          renderRemainingSheet();
         };
         img.onerror = () => {
           ctx.fillStyle = '#64748b';
-          ctx.font = 'bold 22px sans-serif';
-          ctx.fillText('Photo Attached in App', canvas.width / 2, boxY + boxH / 2);
-          finishAndDownload();
+          ctx.font = 'bold 14px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('Photo Attached in App', innerX + photoW / 2, upperY + photoH / 2 - 10);
+          renderRemainingSheet();
         };
         img.src = report.photo;
       } else {
         ctx.fillStyle = '#64748b';
-        ctx.font = 'bold 22px sans-serif';
-        ctx.fillText('No Photo Provided', canvas.width / 2, boxY + boxH / 2);
-        finishAndDownload();
+        ctx.font = 'bold 14px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('No Photo Provided', innerX + photoW / 2, upperY + photoH / 2 - 10);
+        renderRemainingSheet();
       }
     }
 
